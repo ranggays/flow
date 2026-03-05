@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id          String      @id
+    email       String      @unique
+    name        String?     
+    avatarUrl   String?
+    createdAt   DateTime    @default(now())
+
+    workspaces  Workspace[]
+
+    @@map("users")
+}
+
+model Workspace {
+    id          String      @id @default(uuid())
+    name        String
+    description String?
+    category    String?     @default("General")
+    icon        String?     @default("rocket_launch")
+    gradient    String?     @default("bg-gradient-to-r from-blue-600 to-indigo-600")
+    color       String?     @default("#2111d4")
+    team        String?
+    canvasData  Json?
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    ownerId     String
+    owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+    documents   Document[]
+    chats       Chat[]
+
+    @@map("workspaces")
+}
+
+model Document {
+    id          String      @id @default(uuid())
+    name        String      
+    fileUrl     String      // url di supa
+    fileType    String      // tipe file
+    size        Int
+    summary     String?     @db.Text
+    isVectorized  Boolean @default(false)
+    createdAt   DateTime    @default(now())
+
+    workspaceId String
+    workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+    chunks      DocumentChunk[]
+
+    @@map("documents")   
+}
+
+model DocumentChunk {
+    id          String      @id @default(uuid())
+    content     String
+    embedding   Unsupported("vector(3072)")?
+
+    documentId  String
+    document    Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)    
+
+    @@map("document_chunks")
+}
+
+model Chat {
+    id          String      @id @default(uuid())
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    workspaceId String
+    workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+    messages    Message[]
+    
+    @@map("chat")
+}
+
+model Message {
+    id          String      @id @default(uuid())
+    role        String      
+    content     String      @db.Text
+    attachments Json?
+    createdAt   DateTime    @default(now())
+
+    chatId      String
+    chat        Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+    @@map("message")
+}
