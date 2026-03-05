@@ -1,0 +1,1 @@
+fastapi uvicorn supabase python-dotenv pypdf langchain langchain-google-genai google-generativeai
