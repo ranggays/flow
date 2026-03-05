@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.excalidraw {
+  --color-primary: #2111d4 !important;          /* Warna Ungu Utama Anda */
+  --color-primary-darker: #1a0eb0 !important;   /* Sedikit lebih gelap */
+  --color-primary-darkest: #120a7a !important;  /* Paling gelap */
+  --color-primary-light: #6a5ce6 !important;    /* Lebih terang */
+}
+
+/* Mode Gelap */
+.excalidraw.theme--dark {
+  --color-primary: #6a5ce6 !important;          /* Ungu terang agar kontras di mode gelap */
+  --color-primary-darker: #4f46e5 !important;
+  --color-primary-darkest: #2111d4 !important;
+  --color-primary-light: #818cf8 !important;
+  
+  /* Memastikan background panel tools ikut gelap sempurna */
+  --island-bg-color: #1e1e2e !important; 
+  --icon-fill-color: #a5a5b0 !important;
+}
