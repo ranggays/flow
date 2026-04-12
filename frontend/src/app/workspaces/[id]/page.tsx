@@ -11,7 +11,8 @@ import {
 import WorkspaceHeader from "@/components/WorkspaceHeader";
 import SourceLibrary from "@/components/SourceLibrary";
 import ResearchAssistant from "@/components/ResearchAssistant";
-import "@excalidraw/excalidraw/index.css";
+// import "@excalidraw/excalidraw/index.css";
+import "@excalidraw/excalidraw/";
 import ExcalidrawComponent from "@/components/Excalidraw";
 import { useTheme } from "next-themes";
 import { useParams } from "next/navigation";
