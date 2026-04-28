@@ -1,8 +1,7 @@
 "use client"
 import dynamic from "next/dynamic";
 import { useState, useEffect, useRef } from "react";
-// import "@excalidraw/excalidraw/index.css";
-import "@excalidraw/excalidraw/";
+import "@excalidraw/excalidraw/index.css";
 import { useTheme } from "next-themes";
 
 const Excalidraw = dynamic(() => 
@@ -323,12 +322,139 @@ export default function ExcalidrawComponent(props: ExcalidrawProps){
             }, 800);
         };
 
+        const handleDrawDebateMap = async (event: any) => {
+            const generateId = () => Math.random().toString(36).substring(2, 15);
+            isUpdatingFromEventRef.current = true;
+
+            // 1. Fallback aman jika data kosong
+            const { mainClaim, hoaxCheck, pro = [], con = [] } = event.detail.data;
+            const currentElements = excalidrawAPI.getSceneElements();
+            const appState = excalidrawAPI.getAppState();
+
+            const canvasContainer = document.querySelector(".excalidraw__canvas") as HTMLElement || document.querySelector(".excalidraw") as HTMLElement;
+            const domWidth = canvasContainer?.clientWidth || window.innerWidth;
+            const domHeight = canvasContainer?.clientHeight || window.innerHeight;
+
+            const scrollX = appState.scrollX || 0;
+            const scrollY = appState.scrollY || 0;
+            
+            const centerX = -scrollX + (domWidth / 2);
+            const centerY = -scrollY + (domHeight / 2);
+
+            const newElements: any[] = [];
+
+            // 2. Pewarnaan berdasarkan verdict
+            const verdict = hoaxCheck?.verdict || "UNVERIFIED";
+            const safeClaim = mainClaim || "Tidak ada klaim spesifik";
+            
+            let centerBg = "#f1f5f9"; 
+            let centerStroke = "#475569";
+            if (verdict === "HOAX") {
+                centerBg = "#fee2e2"; centerStroke = "#b91c1c";
+            } else if (verdict === "VALID") {
+                centerBg = "#dcfce3"; centerStroke = "#15803d";
+            } else if (verdict === "MISLEADING") {
+                centerBg = "#fef08a"; centerStroke = "#a16207";
+            }
+
+            // 3. Kotak Tengah (Klaim)
+            const coreRectId = "core-rect-" + generateId();
+            const coreTextId = "core-text-" + generateId();
+            
+            newElements.push({
+                ...baseElement(), type: "rectangle", id: coreRectId,
+                x: centerX - 150, y: centerY - 50, width: 300, height: 100,
+                backgroundColor: centerBg, strokeColor: centerStroke, fillStyle: "solid",
+                strokeWidth: 2, strokeStyle: "solid", roughness: 1, 
+                roundness: { type: 3 }, boundElements: [{ id: coreTextId, type: "text" }],
+            });
+
+            newElements.push({
+                ...baseElement(), type: "text", id: coreTextId,
+                x: centerX - 140, y: centerY - 40, width: 280, height: 80,
+                backgroundColor: "transparent", strokeColor: centerStroke, fillStyle: "solid",
+                strokeWidth: 1, strokeStyle: "solid", roughness: 1,
+                fontSize: 16, fontFamily: 1, textAlign: "center", verticalAlign: "middle", 
+                text: `[${verdict}]\n${safeClaim}`, originalText: `[${verdict}]\n${safeClaim}`, 
+                baseline: 18, lineHeight: 1.2, boundElements: null, containerId: coreRectId,
+            });
+
+            // 4. Fungsi Menggambar Samping
+            const drawSideNodes = (items: any[], isPro: boolean) => {
+                if (!items || !Array.isArray(items)) return;
+
+                const startX = isPro ? centerX - 450 : centerX + 250;
+                const startY = centerY - ((items.length * 120) / 2) + 50;
+
+                items.forEach((item, index) => {
+                    const nodeY = startY + (index * 120);
+                    const rectId = `side-rect-${index}-` + generateId();
+                    const textId = `side-text-${index}-` + generateId();
+
+                    const title = item?.title || "Referensi";
+                    const shortText = title.length > 40 ? title.substring(0, 40) + "..." : title;
+
+                    newElements.push({
+                        ...baseElement(), type: "rectangle", id: rectId,
+                        x: startX, y: nodeY, width: 200, height: 80,
+                        backgroundColor: isPro ? "#ecfdf5" : "#fff7ed", 
+                        strokeColor: isPro ? "#059669" : "#ea580c",
+                        fillStyle: "solid", strokeWidth: 1, strokeStyle: "solid", roughness: 1,
+                        roundness: { type: 3 }, boundElements: [{ id: textId, type: "text" }],
+                    });
+
+                    newElements.push({
+                        ...baseElement(), type: "text", id: textId,
+                        x: startX + 10, y: nodeY + 10, width: 180, height: 60,
+                        backgroundColor: "transparent", strokeColor: isPro ? "#059669" : "#ea580c",
+                        fillStyle: "solid", strokeWidth: 1, strokeStyle: "solid", roughness: 1,
+                        fontSize: 12, fontFamily: 1, textAlign: "center", verticalAlign: "middle", 
+                        text: shortText, originalText: shortText, baseline: 12, lineHeight: 1.2,
+                        boundElements: null, containerId: rectId,
+                    });
+
+                    // PANAH ANTI-CRASH (Pakai Math.abs)
+                    const dx = isPro ? 100 : -100;
+                    const dy = centerY - (nodeY + 40);
+
+                    newElements.push({
+                        ...baseElement(), type: "arrow", id: `arrow-side-${index}-` + generateId(),
+                        x: isPro ? startX + 200 : startX, 
+                        y: nodeY + 40,
+                        width: Math.abs(dx), 
+                        height: Math.abs(dy) === 0 ? 1 : Math.abs(dy), 
+                        backgroundColor: "transparent", strokeColor: "#94a3b8",
+                        fillStyle: "hachure", strokeWidth: 2, strokeStyle: "solid", roughness: 1,
+                        roundness: null, 
+                        points: [[0, 0], [dx, dy]], 
+                        startArrowhead: null, endArrowhead: "arrow",
+                        boundElements: null, startBinding: null, endBinding: null,
+                    });
+                });
+            };
+
+            drawSideNodes(pro, true);
+            drawSideNodes(con, false);
+
+            // 5. MENGGABUNGKAN ARRAY DENGAN BENAR (Pakai ... pada newElements)
+            const allElements = [...currentElements, ...newElements];
+            
+            excalidrawAPI.updateScene({ elements: allElements });
+            
+            setTimeout(() => { 
+                excalidrawAPI.scrollToContent(newElements, { fitToViewport: true, viewportZoomFactor: 0.8 }); 
+            }, 200);
+            setTimeout(() => { isUpdatingFromEventRef.current = false; }, 800);
+        };
+
         window.addEventListener("addToCanvas", handleAddToCanvas);
         window.addEventListener("drawMindmap", handleDrawMindmap);
-        
+        window.addEventListener("drawDebateMap", handleDrawDebateMap);
+
         return () => {
             window.removeEventListener("addToCanvas", handleAddToCanvas);
             window.removeEventListener("drawMindmap", handleDrawMindmap);
+            window.removeEventListener("drawDebateMap", handleDrawDebateMap);
         };
     }, [excalidrawAPI, props.workspaceId]);
 
