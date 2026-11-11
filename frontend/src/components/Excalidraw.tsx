@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useState, useEffect, useRef } from "react";
 // import "@excalidraw/excalidraw/index.css";
-import "@excalidraw/excalidraw/";
+// import "@excalidraw/excalidraw/";
 import { useTheme } from "next-themes";
 
 const Excalidraw = dynamic(() => 
