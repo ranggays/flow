@@ -5,7 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { useDropdown } from "@/hooks/useDropdown";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Workspace } from "@/hooks/useWorkspaces";
+import { Workspace } from "@/types/type";
 import { useRouter } from "next/navigation";
 
 interface WorkspaceHeaderProp{

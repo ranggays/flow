@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
-import { Workspace } from '@/hooks/useWorkspaces';
+import { Workspace } from '@/types/type';
 
 interface CreateWorkspaceModalProps{
     isOpen: boolean;

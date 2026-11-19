@@ -5,7 +5,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 
-export default function Header() {
+interface HeaderProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  search: () => void;
+  onKeyDown: (e: React.KeyboardEvent) => void;
+}
+
+export default function Header(props: HeaderProps) {
   const {isOpen, toggle, ref} = useDropdown();
   const [userEmail, setUserEmail] = useState("Loading...");
   const supabase = createClient();
@@ -29,7 +36,7 @@ export default function Header() {
     } catch (error) {
       console.error("Error signing out: ",error);
     }
-  }
+  };
 
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between">
@@ -46,12 +53,15 @@ export default function Header() {
 
       <div className="flex items-center gap-4">
         <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input 
-            className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-32 md:w-64 focus:ring-2 focus:ring-blue-700 outline-none transition-all" 
-            placeholder="Search..." 
+            className="pl-3 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-32 md:w-64 focus:ring-2 focus:ring-blue-700 outline-none transition-all" 
+            placeholder="Search..."
+            value={props.value}
+            onChange={props.onChange} 
             type="text"
+            onKeyDown={props.onKeyDown}
           />
+          <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" onClick={props.search} >search</span>
         </div>
         
         <ThemeToggle />
@@ -66,7 +76,7 @@ export default function Header() {
                 <span className={`material-symbols-outlined text-slate-400 text-sm transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
             </button>
             {isOpen && (
-                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Signed in as</p>
                       <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{userEmail.charAt(15).toUpperCase() + userEmail.slice(16,20)}</p>

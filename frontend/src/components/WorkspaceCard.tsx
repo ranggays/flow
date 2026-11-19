@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { Workspace } from "@/hooks/useWorkspaces";
+import { Workspace } from "@/types/type";
 
 interface WorkspaceCardProps extends Workspace{
   onEdit: (workspace: Workspace) => void;
@@ -68,7 +68,7 @@ export default function WorkspaceCard(props: WorkspaceCardProps) {
                 </div>
             </div>
         </Link>
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3 z-9">
             <button 
             onClick={handleMenuClick}
             className="h-8 w-8 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-all"

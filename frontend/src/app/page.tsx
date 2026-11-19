@@ -4,8 +4,9 @@ import Header from "@/components/Header";
 import WorkspaceCard from "@/components/WorkspaceCard";
 import ActivityRow from "@/components/ActivityRow";
 import CreateWorkspaceModal from "@/components/CreateWorkspaceModal";
-import { useCallback, useEffect, useState } from "react";
-import { useWorkspaces, Workspace } from "@/hooks/useWorkspaces";
+import React, { useEffect, useState } from "react";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
+import { Activity, Workspace } from "@/types/type";
 
 const getTimeAgo = (dateString: string) => {
   const date = new Date(dateString);
@@ -21,39 +22,27 @@ const getTimeAgo = (dateString: string) => {
   return `${days} days ago`;
 };
 
-interface Activity {
-  id: string;
-  title: string;
-  subtitle: string;
-  timestamp: string;
-  icon: string;
-  colorClass: string
-}
-
 export default function Dashboard() {
-  const { workspaces, isLoading, fetchWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace, workspace } = useWorkspaces();
+  const { workspaces, isLoading, fetchWorkspaces, createWorkspace, updateWorkspace, deleteWorkspace, activities, fetchRecentActivity } = useWorkspaces();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
+  const [input, setInput] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
 
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
 
-  const fetchRecentActivity = useCallback(async () => {
-    try {
-      setIsLoadingActivity(true);
-      const res = await fetch("/api/v1/recent-activity");
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setActivities(json.data);
-        }
-      }
-    } catch (error) {
-      console.error("Gagal mengambil aktivitas:", error);
-    } finally {
-      setIsLoadingActivity(false);
+  const handleSearch = () => {
+    setSearch(input);
+  };
+
+  const handleEnter = (e: React.KeyboardEvent) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      handleSearch();
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchWorkspaces();
@@ -84,8 +73,9 @@ export default function Dashboard() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    fetchWorkspaces();
   };
+
+  const searchProduct = workspaces.filter((workspace) => workspace.name === search);
 
   const WorkspaceSkeleton = () => {
     return (
@@ -115,7 +105,7 @@ export default function Dashboard() {
       <Sidebar />
       
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header value={input} onChange={handleInput} search={handleSearch} onKeyDown={handleEnter}/>
 
         <div className="flex-1 overflow-y-auto p-8">
           <div className="max-w-7xl mx-auto">            
@@ -137,21 +127,41 @@ export default function Dashboard() {
                 ))
               ):(
                 <>
-                  {workspaces.map((ws, i) => (
-                    <WorkspaceCard key={ws.id}
-                      {...ws}
-                      id={ws.id}
-                      name={ws.name}
-                      category={ws.category}
-                      color={ws.color}
-                      updatedAt={new Date(ws.updatedAt).toLocaleDateString("id-ID", {
-                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-                      })}
-                      members={2}
-                      onEdit={handleOpenEdit}
-                      onDelete={deleteWorkspace}
-                    />
-                  ))}              
+                  {searchProduct.length > 0 ? 
+                  <>
+                    {searchProduct.map((ws, i) => (
+                      <WorkspaceCard key={ws.id}
+                        {...ws}
+                        id={ws.id}
+                        name={ws.name}
+                        category={ws.category}
+                        color={ws.color}
+                        updatedAt={new Date(ws.updatedAt).toLocaleDateString("id-ID", {
+                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                        })}
+                        members={2}
+                        onEdit={handleOpenEdit}
+                        onDelete={deleteWorkspace}
+                      />
+                    ))}
+                  </> : 
+                  <>
+                    {workspaces.map((ws, i) => (
+                      <WorkspaceCard key={ws.id}
+                        {...ws}
+                        id={ws.id}
+                        name={ws.name}
+                        category={ws.category}
+                        color={ws.color}
+                        updatedAt={new Date(ws.updatedAt).toLocaleDateString("id-ID", {
+                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                        })}
+                        members={2}
+                        onEdit={handleOpenEdit}
+                        onDelete={deleteWorkspace}
+                      />
+                    ))}              
+                  </>}
                 </>
               )}
               <div className="group bg-dashed border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center p-8 hover:border-blue-700/50 hover:bg-blue-700/5 transition-all cursor-pointer min-h-55">
@@ -165,12 +175,8 @@ export default function Dashboard() {
             <div className="mt-16 pb-10">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Recent Activity</h3>
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl divide-y divide-slate-100 dark:divide-slate-800">
-                {isLoadingActivity ? (
-                  <div className="p-6 flex justify-center">
-                    <span className="material-symbols-outlined animate-spin text-slate-400">sync</span>
-                  </div>
-                ) : activities.length > 0 ? (
-                  activities.map((activity) => (
+                { activities!.length > 0 ? (
+                  activities?.map((activity) => (
                     <ActivityRow 
                       key={activity.id}
                       title={activity.title} 
