@@ -1,22 +1,10 @@
 import { useState, useCallback } from 'react';
-
-export interface Workspace{
-    id: string;
-    name: string;
-    description?: string;
-    category: string;
-    icon: string;
-    color: string;
-    createdAt?: string;
-    updatedAt: string;
-    members?: number;
-    team?: string;
-    documents?: any[];
-}
+import { Workspace, Activity } from '@/types/type';
 
 export function useWorkspaces(){
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [workspace, setWorkspace] = useState<Workspace | null>(null);
+    const [activities, setActivites] = useState<Activity[] | null>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     const fetchWorkspaces = useCallback(async () => {
@@ -44,6 +32,21 @@ export function useWorkspaces(){
             }
         } catch (error) {
             console.error("Failed to fetch workspace", error);
+        }
+    }, []);
+
+    const fetchRecentActivity = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const res = await fetch("/api/v1/recent-activity");
+            if (res.ok){
+                const data = await res.json();
+                setActivites(data.data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch activities", error)
+        } finally {
+            setIsLoading(false);
         }
     }, [])
 
@@ -89,8 +92,10 @@ export function useWorkspaces(){
     };
 
     return {
+        activities,
         workspaces,
         isLoading,
+        fetchRecentActivity,
         fetchWorkspaces,
         createWorkspace,
         updateWorkspace,
