@@ -5,19 +5,17 @@ export function useDocumentPolling(
     refreshData: () => void,
     intervalMs: number = 10000
 ){
+    const hasProcessingDocs = documents?.some(doc => !doc.isVectorized) ?? false;
+    
     useEffect(() => {
-        const hasProcessingDocs = documents?.some(doc => !doc.isVectorized);
-        let interval: NodeJS.Timeout;
-
-        if (hasProcessingDocs){
-            interval = setInterval(() => {
-                refreshData();
-                console.log("Checking status document AI...")
-            }, intervalMs)
-        }
+        if(!hasProcessingDocs) return;
+        
+        const interval = window.setInterval(() => {
+            void refreshData();
+        }, intervalMs)
 
         return () => {
-            if (interval) clearInterval(interval)
+            window.clearInterval(interval);
         }
-    }, [documents, refreshData, intervalMs])
+    }, [hasProcessingDocs, refreshData, intervalMs])
 }
