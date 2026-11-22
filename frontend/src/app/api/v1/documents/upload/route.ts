@@ -63,12 +63,22 @@ export async function POST(request: NextRequest){
         });
 
         try {
-            fetch("http://127.0.0.1:8000/api/process-new-documents", {
+            const res = await fetch(`${process.env.BACKEND_URL}/api/v1/process-new-documents`, {
                 method: "POST"
-            }).catch(err => console.error("Failed calling FastAPI", err));
-            console.log("Success Calling FastAPI");
+            })
+
+            if(!res || !res.ok){
+                return NextResponse.json(
+                    {error: "Failed processing documents"},
+                    {status: 502}
+                )
+            }
         } catch (error) {
             console.error("Error Calling", error);
+            return NextResponse.json(
+                {error: "Failed Calling FastAPI"},
+                {status: 502}
+            )
         }
         
         return NextResponse.json(

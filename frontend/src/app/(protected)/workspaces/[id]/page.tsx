@@ -1,7 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic";
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
     Panel,
     Group,
@@ -51,6 +51,10 @@ export default function WorkspacePage(){
         };
     };
 
+    const refreshWorkspace = useCallback(() => (
+        fetchWorkspace(id)
+    ), [fetchWorkspace, id])
+
     if (!mounted) return null;
 
     return(
@@ -74,8 +78,8 @@ export default function WorkspacePage(){
                         }}
                         className="transition-all duration-300"
                     >
-                        <SourceLibrary isCollapsed={isLeftCollapsed} toggleCollapse={toggleLeftPanel} workspaceId={id ?? null} documents={workspace?.documents || []} onUploadSuccess={() => fetchWorkspace(id)}
-                        onDeleteSuccess={() => fetchWorkspace(id)} onDocumentClick={(doc) => setActiveDocument(doc)}/>
+                        <SourceLibrary isCollapsed={isLeftCollapsed} toggleCollapse={toggleLeftPanel} workspaceId={id ?? null} documents={workspace?.documents || []} onUploadSuccess={refreshWorkspace}
+                        onDeleteSuccess={refreshWorkspace} onDocumentClick={(doc) => setActiveDocument(doc)}/>
                     </Panel>
                     {activeDocument && (
                         <>
